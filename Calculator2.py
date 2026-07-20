@@ -1,75 +1,101 @@
 import streamlit as st
 import math
 
+st.set_page_config(page_title="Smart Calculator", page_icon="🧮")
+
 st.title("🧮 Aayla's Smart Calculator")
 
-# 1. Initialize state variables
+# -----------------------------
+# Initialize Session State
+# -----------------------------
 if "expression" not in st.session_state:
     st.session_state.expression = ""
 
+if "result" not in st.session_state:
+    st.session_state.result = ""
+
+
+# -----------------------------
+# Evaluate Expression
+# -----------------------------
 def press_equals():
     try:
-        expr = st.session_state.get("user_input", st.session_state.expression)
-        
-        # Auto-close missing parentheses if forgotten (e.g., 'sin(30' -> 'sin(30)')
+        expr = st.session_state.user_input.strip()
+
+        if expr == "":
+            st.session_state.result = ""
+            return
+
+        # Auto-close missing brackets
         open_b = expr.count("(")
         close_b = expr.count(")")
         if open_b > close_b:
             expr += ")" * (open_b - close_b)
 
-        # Custom allowed math context
-        allowed_globals = {
-            "sin": lambda deg: math.sin(math.radians(deg)),
-            "cos": lambda deg: math.cos(math.radians(deg)),
-            "tan": lambda deg: math.tan(math.radians(deg)),
+        allowed = {
+            "__builtins__": {},
+            "sin": lambda x: math.sin(math.radians(x)),
+            "cos": lambda x: math.cos(math.radians(x)),
+            "tan": lambda x: math.tan(math.radians(x)),
             "log": math.log10,
             "factorial": math.factorial,
             "pi": math.pi,
             "e": math.e,
-            "math": math,
         }
 
-        result = eval(expr, allowed_globals)
-        
+        result = eval(expr, allowed)
+
         if isinstance(result, float):
             result = round(result, 6)
-            
+
         st.session_state.result = result
         st.session_state.expression = str(result)
         st.session_state.user_input = str(result)
+
     except Exception:
         st.session_state.result = "Invalid Expression"
 
-# Sync typed input with buttons
-def sync_input():
-    st.session_state.expression = st.session_state.user_input
 
-# Text input for keyboard typing + Enter key support
-st.text_input(
-    "Enter your calculation:",
-    value=st.session_state.expression,
-    key="user_input",
-    on_change=press_equals,
-)
-
-if "result" in st.session_state:
-    st.write("### Result:", st.session_state.result)
-
-# Helper function to append values safely for BOTH state keys
+# -----------------------------
+# Button Functions
+# -----------------------------
 def add_val(val):
-    st.session_state.expression += str(val)
-    st.session_state.user_input = st.session_state.expression
+    current = st.session_state.get("user_input", "")
+    current += str(val)
+    st.session_state.user_input = current
+    st.session_state.expression = current
+
 
 def do_clear():
     st.session_state.expression = ""
     st.session_state.user_input = ""
+    st.session_state.result = ""
+
 
 def do_backspace():
-    st.session_state.expression = st.session_state.expression[:-1]
-    st.session_state.user_input = st.session_state.expression
+    current = st.session_state.get("user_input", "")
+    current = current[:-1]
+    st.session_state.user_input = current
+    st.session_state.expression = current
 
-# 5 Columns Layout
-col1, col2, col3, col4, col5 = st.columns([4, 4, 4, 4, 4])
+
+# -----------------------------
+# Text Input
+# -----------------------------
+st.text_input(
+    "Enter your calculation:",
+    key="user_input",
+    on_change=press_equals,
+)
+
+if st.session_state.result != "":
+    st.write("### Result:", st.session_state.result)
+
+
+# -----------------------------
+# Calculator Layout
+# -----------------------------
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     st.button("7", use_container_width=True, on_click=lambda: add_val("7"))
