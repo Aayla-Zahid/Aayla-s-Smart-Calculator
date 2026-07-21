@@ -121,5 +121,5 @@ streamlit run calculator.py
 
 GitHub: https://github.com/your-username
 
-LinkedIn: https://www.linkedin.com/in/aayla-zahid-butt/
+LinkedIn: https://www.linkedin.com/in/aayla-zahid-butt-887389384/
 
